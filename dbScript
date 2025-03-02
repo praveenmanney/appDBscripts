@@ -1,0 +1,70 @@
+-- SQL Database Schema (PostgreSQL/MySQL)
+
+-- Users Table
+CREATE TABLE users (
+    user_id UUID PRIMARY KEY,
+    name VARCHAR(100),
+    email VARCHAR(100) UNIQUE,
+    phone VARCHAR(15) UNIQUE,
+    password_hash TEXT,
+    user_type ENUM('end_user', 'seller'),
+    profile_picture TEXT,
+    bio TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Sellers Table
+CREATE TABLE sellers (
+    seller_id UUID PRIMARY KEY REFERENCES users(user_id),
+    service_category VARCHAR(50),
+    experience INT,
+    certification TEXT,
+    location GEOGRAPHY,
+    available BOOLEAN DEFAULT TRUE,
+    rating DECIMAL(3,2) DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Services Table
+CREATE TABLE services (
+    service_id UUID PRIMARY KEY,
+    seller_id UUID REFERENCES sellers(seller_id),
+    service_name VARCHAR(100),
+    description TEXT,
+    price DECIMAL(10,2),
+    duration INTERVAL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Appointments Table
+CREATE TABLE appointments (
+    appointment_id UUID PRIMARY KEY,
+    user_id UUID REFERENCES users(user_id),
+    seller_id UUID REFERENCES sellers(seller_id),
+    service_id UUID REFERENCES services(service_id),
+    appointment_time TIMESTAMP,
+    status ENUM('pending', 'confirmed', 'completed', 'canceled') DEFAULT 'pending',
+    payment_status ENUM('pending', 'paid', 'refunded') DEFAULT 'pending',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Payments Table
+CREATE TABLE payments (
+    payment_id UUID PRIMARY KEY,
+    appointment_id UUID REFERENCES appointments(appointment_id),
+    user_id UUID REFERENCES users(user_id),
+    amount DECIMAL(10,2),
+    payment_method ENUM('card', 'wallet', 'upi', 'net banking'),
+    payment_status ENUM('success', 'failed', 'pending') DEFAULT 'pending',
+    transaction_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Ratings & Reviews Table
+CREATE TABLE reviews (
+    review_id UUID PRIMARY KEY,
+    user_id UUID REFERENCES users(user_id),
+    seller_id UUID REFERENCES sellers(seller_id),
+    rating DECIMAL(3,2) CHECK (rating BETWEEN 1 AND 5),
+    review_text TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
